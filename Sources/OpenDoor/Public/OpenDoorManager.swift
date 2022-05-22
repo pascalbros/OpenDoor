@@ -8,10 +8,14 @@ public class OpenDoorManager {
     public weak var dataSource: OpenDoorDataSource?
     public weak var delegate: OpenDoorDelegate?
 
+    public var shouldRecognizeImplicitMarkers = false
+
     public fileprivate(set) var floor: ODFloor?
     public fileprivate(set) var location: ODLocation?
 
     fileprivate var sessionManager: OpenDoorSessionManager!
+    fileprivate var barCodesRecognizer = BarCodesRecognizer(symbologies: [.qr])
+    fileprivate var barCodesRecognizerLastUpdated = Date()
 
     public init() {
         sessionManager = OpenDoorSessionManager(manager: self)
@@ -25,7 +29,11 @@ public class OpenDoorManager {
         sessionManager.session.pause()
     }
 
-    public func loadReferences(_ references: [ODImageReference]) {
+    public func loadReferences(_ references: [ODReference]) {
+        loadImageReferences(references.compactMap { $0 as? ODImageReference })
+    }
+
+    public func loadImageReferences(_ references: [ODImageReference]) {
         var images: Set<ARReferenceImage> = []
         for anchor in references {
             guard let image = anchor.image?.cgImage else { continue }
@@ -36,7 +44,13 @@ public class OpenDoorManager {
         sessionManager.configuration.detectionImages = images
     }
 
-    public func injectLocation(_ location: ODLocation, floor: ODFloor) {
+    public func injectCurrentLocationFix(_ position: CGPoint, floor: ODFloor) {
+        guard let cameraPosition = sessionManager.session.currentFrame?.camera.transform.columns.3 else { return }
+        let injectedPosition = Vector3(Float(position.x), Float(position.y), 0)
+        sessionManager.onAnchorFound(position: (cameraPosition, injectedPosition), floor: floor, updatePositionFix: true)
+    }
+
+    func injectLocation(_ location: ODLocation, floor: ODFloor) {
         onFloorChanged(floor)
         onLocationChanged(location)
     }
@@ -50,6 +64,21 @@ public class OpenDoorManager {
     fileprivate func onLocationChanged(_ location: ODLocation) {
         self.location = location
         delegate?.openDoor(self, didUpdateLocation: location)
+    }
+}
+
+extension OpenDoorManager {
+    fileprivate func recognizeQRCodes(frame: ARFrame) {
+        guard shouldRecognizeImplicitMarkers else { return }
+        guard Date().timeIntervalSince(barCodesRecognizerLastUpdated) > 1 else { return } //One request for each second
+        barCodesRecognizerLastUpdated = Date()
+        barCodesRecognizer.recognize(frame: frame) { barCodes in
+            for barCode in barCodes {
+                guard let anchor = self.dataSource?.recognizeAnchor(name: barCode) else { continue }
+                let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
+                self.sessionManager.onAnchorFound(position: (frame.camera.transform.columns.3, position), floor: anchor.floor, updatePositionFix: true)
+            }
+        }
     }
 }
 
@@ -67,19 +96,21 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         configuration.worldAlignment = .gravityAndHeading
     }
 
-    public func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
+    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
         anchors.forEach {
             guard let name = $0.name else { return }
             guard let anchor = manager.dataSource?.recognizeAnchor(name: name) else { return }
-            if manager.floor != anchor.floor {
-                referencePosition = nil
-                manager.floor = nil
-                manager.onFloorChanged(anchor.floor)
-            }
-            if referencePosition == nil {
-                let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
-                referencePosition = ($0.transform.columns.3, position)
-            }
+            let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
+            onAnchorFound(position: ($0.transform.columns.3, position), floor: anchor.floor, updatePositionFix: true)
+        }
+    }
+
+    func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        anchors.forEach {
+            guard let name = $0.name else { return }
+            guard let anchor = manager.dataSource?.recognizeAnchor(name: name) else { return }
+            let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
+            onAnchorFound(position: ($0.transform.columns.3, position), floor: anchor.floor, updatePositionFix: true)
         }
     }
 
@@ -92,6 +123,18 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         if let referencePosition = referencePosition, let floor = manager.floor {
             let currentLocation = calculateLocation(currentPosition: position, referencePosition: referencePosition, oneMeterInPixels: floor.oneMeterInPixels)
             manager.injectLocation(currentLocation, floor: floor)
+        }
+        manager.recognizeQRCodes(frame: frame)
+    }
+
+    func onAnchorFound(position: ReferencePosition, floor: ODFloor, updatePositionFix: Bool) {
+        if manager.floor != floor {
+            referencePosition = nil
+            manager.floor = nil
+            manager.onFloorChanged(floor)
+        }
+        if updatePositionFix || referencePosition == nil {
+            referencePosition = position
         }
     }
 
