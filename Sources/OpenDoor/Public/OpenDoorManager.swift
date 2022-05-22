@@ -37,14 +37,14 @@ public class OpenDoorManager {
     }
 
     public func injectLocation(_ location: ODLocation, floor: ODFloor) {
-        if self.floor != floor {
-            onFloorChanged(floor)
-        }
+        onFloorChanged(floor)
         onLocationChanged(location)
     }
 
     fileprivate func onFloorChanged(_ floor: ODFloor) {
+        if self.floor == floor { return }
         self.floor = floor
+        delegate?.openDoor(self, didUpdateFloor: floor)
     }
 
     fileprivate func onLocationChanged(_ location: ODLocation) {
@@ -56,7 +56,7 @@ public class OpenDoorManager {
 fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
 
     unowned let manager: OpenDoorManager
-    var referencePosition: (simd_float4, Vector3)?
+    var referencePosition: ReferencePosition?
     var session = ARSession()
     var configuration = ARWorldTrackingConfiguration()
 
@@ -73,6 +73,7 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
             guard let anchor = manager.dataSource?.recognizeAnchor(name: name) else { return }
             if manager.floor != anchor.floor {
                 referencePosition = nil
+                manager.floor = nil
                 manager.onFloorChanged(anchor.floor)
             }
             if referencePosition == nil {
