@@ -57,8 +57,12 @@ Implement the delegate `OpenDoorDelegate`:
 
 ```swift
 extension MyObject: OpenDoorDelegate {
+    func openDoor(_ manager: OpenDoorManager, didUpdateFloor floor: ODFloor) {
+        print("New floor: \(floor.name)")
+    }
+    
     func openDoor(_ manager: OpenDoorManager, didUpdateLocation location: ODLocation) {
-        print(location)
+        print("New location: \(location)")
     }
 }
 ```
