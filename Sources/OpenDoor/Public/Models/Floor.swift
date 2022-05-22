@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-open class ODFloor: Equatable {
+public struct ODFloor: Equatable {
     public let name: String
     public let floor: Int
     public let oneMeterInPixels: Float

@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-open class ODImageReference {
+public struct ODImageReference {
     public let identifier: String
     public let image: UIImage?
     public let imagePath: String?
