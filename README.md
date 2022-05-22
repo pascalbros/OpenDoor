@@ -1,6 +1,9 @@
 # OpenDoor
 
-An iOS ARKit-based Indoor Positioning System.
+An iOS, infrastructure-less ARKit-based Indoor Positioning System.
+
+OpenDoor works with explicit and implicit markers.
+The first position fix is given by one of the markers found during the AR session, supports multiple floors building and custom injection of a location fix.
 
 ## Install
 
@@ -8,7 +11,7 @@ Install using the Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/pascalbros/OpenDoor.git", .upToNextMajor(from: "0.1.0"))
+    .package(url: "https://github.com/pascalbros/OpenDoor.git", .upToNextMajor(from: "0.4.0"))
 ]
 
 ```
@@ -17,13 +20,18 @@ dependencies: [
 
 Create an instance:
 
-```Swift
+```swift
 let openDoor = OpenDoorManager()
 openDoor.dataSource = self
 openDoor.delegate = self
 ```
 
-Setup the references:
+Setup explicit markers:
+```swift
+openDoor.shouldRecognizeImplicitMarkers = true
+```
+
+Setup implicit markers:
 
 ```swift
 let floor = ODFloor(name: "Second", floor: 2, oneMeterInPixels: 100)
@@ -60,3 +68,7 @@ Run:
 ```swift
 openDoor.start()
 ```
+
+# License
+
+OpenDoor is licensed under the terms of the MIT License. Please see the `LICENSE.md` file for full details.
