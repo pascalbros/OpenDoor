@@ -47,7 +47,7 @@ openDoor.loadReferences([reference])
 
 ```swift
 extension MyObject: OpenDoorDataSource {
-    func recognizeAnchor(name: String) -> ODImageReference? {
+    func recognizeAnchor(name: String) -> ODReference? {
         nil
     }
 }
