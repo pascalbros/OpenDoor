@@ -73,6 +73,7 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
             guard let anchor = manager.dataSource?.recognizeAnchor(name: name) else { return }
             if manager.floor != anchor.floor {
                 referencePosition = nil
+                manager.onFloorChanged(anchor.floor)
             }
             if referencePosition == nil {
                 let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
