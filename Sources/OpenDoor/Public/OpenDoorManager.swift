@@ -44,7 +44,13 @@ public class OpenDoorManager {
         sessionManager.configuration.detectionImages = images
     }
 
-    public func injectLocation(_ location: ODLocation, floor: ODFloor) {
+    public func injectCurrentLocationFix(_ position: CGPoint, floor: ODFloor) {
+        guard let cameraPosition = sessionManager.session.currentFrame?.camera.transform.columns.3 else { return }
+        let injectedPosition = Vector3(Float(position.x), Float(position.y), 0)
+        sessionManager.onAnchorFound(position: (cameraPosition, injectedPosition), floor: floor, updatePositionFix: true)
+    }
+
+    func injectLocation(_ location: ODLocation, floor: ODFloor) {
         onFloorChanged(floor)
         onLocationChanged(location)
     }
