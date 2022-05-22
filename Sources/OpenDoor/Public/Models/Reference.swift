@@ -1,8 +1,8 @@
-//
-//  File.swift
-//  
-//
-//  Created by Pasquale Ambrosini on 22/05/22.
-//
-
 import Foundation
+import CoreGraphics
+
+public protocol ODReference {
+    var identifier: String { get }
+    var floor: ODFloor { get }
+    var position: CGPoint { get }
+}

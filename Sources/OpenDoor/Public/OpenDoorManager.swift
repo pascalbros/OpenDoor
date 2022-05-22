@@ -25,7 +25,11 @@ public class OpenDoorManager {
         sessionManager.session.pause()
     }
 
-    public func loadReferences(_ references: [ODImageReference]) {
+    public func loadReferences(_ references: [ODReference]) {
+        loadImageReferences(references.compactMap { $0 as? ODImageReference })
+    }
+
+    public func loadImageReferences(_ references: [ODImageReference]) {
         var images: Set<ARReferenceImage> = []
         for anchor in references {
             guard let image = anchor.image?.cgImage else { continue }
