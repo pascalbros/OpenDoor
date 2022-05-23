@@ -1,5 +1,6 @@
 import Foundation
 import ARKit
+import RealityKit
 
 fileprivate typealias ReferencePosition = (simd_float4, Vector3)
 
@@ -12,6 +13,7 @@ public class OpenDoorManager {
 
     public fileprivate(set) var floor: ODFloor?
     public fileprivate(set) var location: ODLocation?
+    public var session: ARSession { sessionManager.session }
 
     fileprivate var sessionManager: OpenDoorSessionManager!
     fileprivate var barCodesRecognizer = BarCodesRecognizer(symbologies: [.qr])
@@ -72,11 +74,12 @@ extension OpenDoorManager {
         guard shouldRecognizeImplicitMarkers else { return }
         guard Date().timeIntervalSince(barCodesRecognizerLastUpdated) > 1 else { return } //One request for each second
         barCodesRecognizerLastUpdated = Date()
+        let cameraPosition = frame.camera.transform.columns.3
         barCodesRecognizer.recognize(frame: frame) { barCodes in
             for barCode in barCodes {
-                guard let anchor = self.dataSource?.recognizeAnchor(name: barCode) else { continue }
+                guard let anchor = self.dataSource?.recognizeAnchor(name: barCode.1) else { continue }
                 let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
-                self.sessionManager.onAnchorFound(position: (frame.camera.transform.columns.3, position), floor: anchor.floor, updatePositionFix: true)
+                self.sessionManager.onAnchorFound(position: (hit, position), floor: anchor.floor, updatePositionFix: true)
             }
         }
     }
