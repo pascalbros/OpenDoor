@@ -79,7 +79,7 @@ extension OpenDoorManager {
             for barCode in barCodes {
                 guard let anchor = self.dataSource?.recognizeAnchor(name: barCode.1) else { continue }
                 let position = Vector3(Float(anchor.position.x), Float(anchor.position.y), 0)
-                self.sessionManager.onAnchorFound(position: (hit, position), floor: anchor.floor, updatePositionFix: true)
+                self.sessionManager.onAnchorFound(position: (cameraPosition, position), floor: anchor.floor, updatePositionFix: true)
             }
         }
     }
