@@ -4,12 +4,12 @@ import UIKit
 public struct ODFloor: Equatable {
     public let name: String
     public let floor: Int
-    public let oneMeterInPixels: Float
+    public let scale: Float
 
-    public init(name: String, floor: Int, oneMeterInPixels: Float) {
+    public init(name: String, floor: Int, scale: Float = 1) {
         self.name = name
         self.floor = floor
-        self.oneMeterInPixels = oneMeterInPixels
+        self.scale = scale
     }
 
     public static func == (lhs: ODFloor, rhs: ODFloor) -> Bool {

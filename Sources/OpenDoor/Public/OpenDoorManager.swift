@@ -124,7 +124,7 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         }
         let position = frame.camera.transform.columns.3
         if let referencePosition = referencePosition, let floor = manager.floor {
-            let currentLocation = calculateLocation(currentPosition: position, referencePosition: referencePosition, oneMeterInPixels: floor.oneMeterInPixels)
+            let currentLocation = calculateLocation(currentPosition: position, referencePosition: referencePosition, eulerAngles: frame.camera.eulerAngles, oneMeterInPixels: floor.scale)
             manager.injectLocation(currentLocation, floor: floor)
         }
         manager.recognizeQRCodes(frame: frame)
@@ -141,13 +141,13 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         }
     }
 
-    fileprivate func calculateLocation(currentPosition: simd_float4, referencePosition: ReferencePosition, oneMeterInPixels: Float) -> ODLocation {
+    fileprivate func calculateLocation(currentPosition: simd_float4, referencePosition: ReferencePosition, eulerAngles: simd_float3, oneMeterInPixels: Float) -> ODLocation {
         let mapPositionInMeters = referencePosition.1 / oneMeterInPixels
         let delta = referencePosition.0 - currentPosition
         let newPosition = Vector3(x: (mapPositionInMeters.x + delta.x) * oneMeterInPixels,
                                   y: (mapPositionInMeters.y + delta.z) * oneMeterInPixels,
                                   z: currentPosition.y)
-        return ODLocation(coordinates: newPosition)
+        return ODLocation(coordinates: newPosition, heading: 360 - eulerAngles.y.deg.heading)
     }
 
 }
