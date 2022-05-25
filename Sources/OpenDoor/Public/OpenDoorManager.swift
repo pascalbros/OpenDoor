@@ -9,7 +9,7 @@ public class OpenDoorManager {
     public weak var dataSource: OpenDoorDataSource?
     public weak var delegate: OpenDoorDelegate?
 
-    public var shouldRecognizeImplicitMarkers = false
+    public var shouldRecognizeExplicitMarkers = false
 
     public fileprivate(set) var floor: ODFloor?
     public fileprivate(set) var location: ODLocation?
@@ -71,7 +71,7 @@ public class OpenDoorManager {
 
 extension OpenDoorManager {
     fileprivate func recognizeQRCodes(frame: ARFrame) {
-        guard shouldRecognizeImplicitMarkers else { return }
+        guard shouldRecognizeExplicitMarkers else { return }
         guard Date().timeIntervalSince(barCodesRecognizerLastUpdated) > 1 else { return } //One request for each second
         barCodesRecognizerLastUpdated = Date()
         let cameraPosition = frame.camera.transform.columns.3

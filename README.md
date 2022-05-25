@@ -28,7 +28,7 @@ openDoor.delegate = self
 
 Setup explicit markers:
 ```swift
-openDoor.shouldRecognizeImplicitMarkers = true
+openDoor.shouldRecognizeExplicitMarkers = true
 ```
 
 Setup implicit markers:
