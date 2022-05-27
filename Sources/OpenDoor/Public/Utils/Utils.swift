@@ -1,5 +1,6 @@
 import Foundation
 import simd
+import CoreGraphics
 
 public typealias Vector3 = SIMD3<Float>
 
@@ -16,5 +17,13 @@ extension simd_float4x4 {
 extension Float {
     var deg: Float { self * 180 / .pi }
 
-    var heading: Float { self < 0 ? 360 + self : self }
+    var rad: Float { self * .pi / 180 }
+
+    var heading: Float { (self < 0 ? 360 + self : self).truncatingRemainder(dividingBy: 360) }
+}
+
+extension CGPoint {
+    init(x: Float, y: Float) {
+        self.init(x: CGFloat(x), y: CGFloat(y))
+    }
 }

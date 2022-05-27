@@ -124,7 +124,7 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         }
         let position = frame.camera.transform.columns.3
         if let referencePosition = referencePosition, let floor = manager.floor {
-            let currentLocation = calculateLocation(currentPosition: position, referencePosition: referencePosition, eulerAngles: frame.camera.eulerAngles, oneMeterInPixels: floor.scale)
+            let currentLocation = calculateLocation(currentPosition: position, referencePosition: referencePosition, eulerAngles: frame.camera.eulerAngles, floorScale: floor.scale, floorHeading: floor.normalizedHeading)
             manager.injectLocation(currentLocation, floor: floor)
         }
         manager.recognizeQRCodes(frame: frame)
@@ -141,13 +141,15 @@ fileprivate class OpenDoorSessionManager: NSObject, ARSessionDelegate {
         }
     }
 
-    fileprivate func calculateLocation(currentPosition: simd_float4, referencePosition: ReferencePosition, eulerAngles: simd_float3, oneMeterInPixels: Float) -> ODLocation {
-        let mapPositionInMeters = referencePosition.1 / oneMeterInPixels
+    fileprivate func calculateLocation(currentPosition: simd_float4, referencePosition: ReferencePosition, eulerAngles: simd_float3, floorScale: Float, floorHeading: Float) -> ODLocation {
+        let mapPositionInMeters = referencePosition.1 / floorScale
         let delta = referencePosition.0 - currentPosition
-        let newPosition = Vector3(x: (mapPositionInMeters.x + delta.x) * oneMeterInPixels,
-                                  y: (mapPositionInMeters.y + delta.z) * oneMeterInPixels,
+        var newPosition = Vector3(x: (mapPositionInMeters.x + delta.x) * floorScale,
+                                  y: (mapPositionInMeters.y + delta.z) * floorScale,
                                   z: currentPosition.y)
+        let rotatedPoint = MathUtils.rotatePoint(CGPoint(x: newPosition.x, y: newPosition.y), center: CGPoint(x: referencePosition.1.x, y: referencePosition.1.y), angle: CGFloat(floorHeading.heading.rad))
+        newPosition.x = Float(rotatedPoint.x)
+        newPosition.y = Float(rotatedPoint.y)
         return ODLocation(coordinates: newPosition, heading: 360 - eulerAngles.y.deg.heading)
     }
-
 }
