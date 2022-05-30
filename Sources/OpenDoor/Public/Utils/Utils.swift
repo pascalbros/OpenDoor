@@ -19,7 +19,10 @@ extension Float {
 
     var rad: Float { self * .pi / 180 }
 
-    var heading: Float { (self < 0 ? 360 + self : self).truncatingRemainder(dividingBy: 360) }
+    var heading: Float {
+        let value = self.truncatingRemainder(dividingBy: 360)
+        return value < 0 ? value + 360 : value
+    }
 }
 
 extension CGPoint {
